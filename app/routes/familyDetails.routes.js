@@ -13,8 +13,8 @@ module.exports = function (app) {
   app.post(
     "/api/familyDetails/create",
     [
-    //   authJwt.verifyToken, 
-    //   authJwt.isSuperadminorAdmin  
+      //   authJwt.verifyToken, 
+      //   authJwt.isSuperadminorAdmin  
     ],
     controller.create
   );
@@ -22,8 +22,8 @@ module.exports = function (app) {
   app.get(
     "/api/familyDetails/list",
     [
-    //   authJwt.verifyToken, 
-    //   authJwt.isSuperadminorAdmin
+      //   authJwt.verifyToken, 
+      //   authJwt.isSuperadminorAdmin
     ],
     controller.familyDetailsList
   );
@@ -31,7 +31,7 @@ module.exports = function (app) {
   app.get(
     "/api/familyDetails/update/:key",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.update
@@ -40,9 +40,18 @@ module.exports = function (app) {
   app.get(
     "/api/familyDetails/delete/:key",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.delete
+  );
+
+  app.post(
+    "/api/familyDetails/familyLevel",
+    [
+      //   authJwt.verifyToken, 
+      //   authJwt.isSuperadminorAdmin  
+    ],
+    controller.familyLevel
   );
 };

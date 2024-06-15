@@ -1,4 +1,4 @@
 module.exports = {
-  secret: "skvapp@2024",
-  refresh_secret: "!@2024skvapp",
+  secret: "nammaooruapp@2024",
+  refresh_secret: "!@2024nammaooruapp",
 };

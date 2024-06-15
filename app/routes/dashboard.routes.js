@@ -20,5 +20,14 @@ module.exports = function (app) {
     controller.dashboardDataList
   );
 
+  app.get(
+    "/api/dashboard/dashboardMemberCount",
+    [
+    //   authJwt.verifyToken, 
+    //   authJwt.isSuperadminorAdmin
+    ],
+    controller.dashboardMemberCount
+  );
 
+  
 };

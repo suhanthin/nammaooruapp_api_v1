@@ -113,3 +113,91 @@ exports.dashboardDataList = async (req, res) => {
       })
     }
 }
+
+exports.dashboardMemberCount = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  let membersDetails = "";
+  try {
+    const {usersListquery} = req.body;
+    const userResult = await Promise.all([
+      userslist(
+        {
+          usersListquery, session
+        }
+      ),
+    ]);
+    
+    const failedTxns = userResult.filter((result) => result.status !== true);
+    if (failedTxns.length) {
+      const errors = failedTxns.map(a => a.message);
+      await session.abortTransaction();
+      return res.status(400).json({
+        status: false,
+        message: errors
+      })
+    } else {
+      if(userResult[0].status == true) {
+          let tempUserData = userResult[0].data;
+          let aClass_Male_members = 0;
+          let aClass_female_members = 0;
+          let bClass_Male_members = 0;
+          let bClass_female_members = 0;
+          let cClass_Male_members = 0;
+          let cClass_female_members = 0;
+          if(tempUserData.length > 0) {
+              tempUserData.map(item => {
+                  if(item.memberType == 'a-class' && item.gender == 'male'){
+                    if(item.status == 'active'){
+                      aClass_Male_members = aClass_Male_members + 1;
+                    }
+                  } else if(item.memberType == 'a-class' && item.gender == 'female'){
+                    if(item.status == 'active'){
+                      aClass_female_members = aClass_female_members + 1;
+                    }
+                  } else if(item.memberType == 'b-class' && item.gender == 'male'){
+                    if(item.status == 'active'){
+                      bClass_Male_members = bClass_Male_members + 1;
+                    }
+                  } else if(item.memberType == 'b-class' && item.gender == 'female'){
+                    if(item.status == 'active'){
+                      bClass_female_members = bClass_female_members + 1;
+                    }
+                  } if(item.memberType == 'c-class' && item.gender == 'male'){
+                    if(item.status == 'active'){
+                      cClass_Male_members = cClass_Male_members + 1;
+                    }
+                  } else if(item.memberType == 'c-class' && item.gender == 'female'){
+                    if(item.status == 'active'){
+                      cClass_female_members = cClass_female_members + 1;
+                    }
+                  }
+              });
+          }
+          var tempArray = {
+            aClass_Male_members:aClass_Male_members.toString(),
+            aClass_female_members:aClass_female_members.toString(),
+            bClass_Male_members:bClass_Male_members.toString(),
+            bClass_female_members:bClass_female_members.toString(),
+            cClass_Male_members:cClass_Male_members.toString(),
+            cClass_female_members:cClass_female_members.toString(),
+          }
+          membersDetails = tempArray
+      }
+    }
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      membersDetails
+    })
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
+      status: false,
+      message: `Unable to find perform transfer. Please try again. \n Error: ${err}`
+    })
+  }
+}

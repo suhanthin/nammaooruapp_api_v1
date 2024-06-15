@@ -22,6 +22,6 @@ db.cronCheck = require("./cronCheck.model");
 db.familyDetails = require("./familyDetails.model");
 db.familyDetailCount = require("./familyDetailsCount.model");
 
-db.ROLES = ["user", "admin", "member", "superadmin"];
+db.ROLES = ["superadmin", "admin", "chitadmin", "chitcollectors", "member"];
 
 module.exports = db;

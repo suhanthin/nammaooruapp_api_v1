@@ -11,30 +11,30 @@ module.exports = function (app) {
     next();
   });
 
-  app.get(
-    "/api/user/update/:key",
-    [
-      authJwt.verifyToken, 
-      verifySignUp.checkDuplicateUsername,
-      verifySignUp.checkRolesExisted,
-      authJwt.ischeckLoggedin,
-      authJwt.isSuperadminorAdmin,
-      checkValueExisted.checkPositionNameExisted
-    ],
-    controller.update
-  );
+  // app.get(
+  //   "/api/user/update/:key",
+  //   [
+  //     authJwt.verifyToken, 
+  //     verifySignUp.checkDuplicateUsername,
+  //     verifySignUp.checkRolesExisted,
+  //     authJwt.ischeckLoggedin,
+  //     authJwt.isSuperadminorAdmin,
+  //     checkValueExisted.checkPositionNameExisted
+  //   ],
+  //   controller.update
+  // );
 
   app.get(
     "/api/user/delete/:key",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.ischeckLoggedin,
       authJwt.isSuperadminorAdmin
     ],
     controller.delete
   );
 
-  app.get(
+  app.post(
     "/api/usersList",
     [
       // authJwt.verifyToken, 
@@ -73,5 +73,14 @@ module.exports = function (app) {
       // authJwt.isSuperadminorAdmin
     ],
     controller.usersearch
+  );
+
+  app.post(
+    "/api/administratorList",
+    [
+      // authJwt.verifyToken, 
+      // authJwt.isSuperadminorAdmin
+    ],
+    controller.administratorList
   );
 };
