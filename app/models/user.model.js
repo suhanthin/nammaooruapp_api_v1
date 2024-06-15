@@ -15,26 +15,22 @@ const User = mongoose.model(
       type: String,
       required: true,
     },
-    roles: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Role",
-    },
-    rolesName:String,
-    isAdministrator:{
+    roleName: String,
+    isAdministrator: {
       type: Boolean,
       default: false
     },
     position: {
       type: String,
-      default: ''
+      required: [function () { return this.isAdministrator == true; }, "position required"]
     },
-    isChitCommitteeMember:{
+    isChitCommitteeMember: {
       type: Boolean,
       default: false
     },
     chitCommitteePosition: {
       type: String,
-      default: ''
+      required: [function () { return this.isChitCommitteeMember == true; }, "Committee Position required"]
     },
     token: String,
     refresh_token: String,
@@ -62,49 +58,67 @@ const User = mongoose.model(
     balanceTribute: {
       type: Number,
       required: true,
-      default:0,
+      default: 0,
       integer: true,
       get: v => Math.round(v),
       set: v => Math.round(v),
-      validate : {
-        validator : Number.isInteger,
-        message   : '{VALUE} is not an integer value'
+      validate: {
+        validator: Number.isInteger,
+        message: '{VALUE} is not an integer value'
       }
     },
     userType: {
       type: String,
       required: true,
     },
-    usertypeSavedhalf:String,
-    userTypechangedDate: String,
+    usertypeSavedhalf: {
+      type: String,
+      required: [function () { return this.userType == 'half'; }, "user type Saved half required"]
+    },
+    userTypefullchangedDate: String,
     maritalStatus: String,
+    maritalStatusSavedsingle: {
+      type: String,
+      required: [function () { return this.maritalStatus == 'single'; }, "marital Status Saved single required"]
+    },
     maritalchangedDate: String,
-    maritalStatusSavedsingle:String,
     memberType: {
       type: String,
       required: true,
     },
-    memberTypechangedDate: String,
     memberTypeSavedbclass: {
       type: String,
-      trim: true,
-      maxlength: 20
+      required: [function () { return this.memberType == 'b-class'; }, "member Type Saved b-class required"]
     },
-    memberTypeAddedDate: String,
+    memberTypebclasschangedDate: String,
+    memberTypebclassAddedDate: String,
     memberTypeSavedcclass: {
       type: String,
-      trim: true,
-      maxlength: 20
+      required: [function () { return this.memberType == 'c-class'; }, "member Type Saved c-class required"]
     },
     identityProof: String,
-    identityProofNo: String,
+    identityProofNo: {
+      type: String,
+      validate: {
+        validator: function (value) {
+          if (this.identityProof) {
+            return value && value.trim().length > 0;
+          }
+          return true;
+        },
+        message: 'Identity Proof Number is required when Identity Proof is provided'
+      }
+    },
     nationality: {
       type: String,
       default: 'indian'
     },
     qualification: String,
     jobType: String,
-    jobportal: String,
+    jobportal: {
+      type: String,
+      required: [function () { return this.jobType == 'Govt' }, "job portal required"]
+    },
     jobdetails: String,
     familyId: String,
     status: {
@@ -117,6 +131,10 @@ const User = mongoose.model(
     updated_at: { type: Date },
     created_by: String,
     updated_by: String,
+    enrollDate: String,
+    enrolledType: String,
+    reJoiningDate: String,
+    isChanthaRequired: Boolean
   }, { timestamps: true })
 );
 

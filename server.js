@@ -25,9 +25,9 @@ app.use(
 const db = require("./app/models");
 const Role = db.role;
 const CronCheck = db.cronCheck;
-const uri = "mongodb+srv://suhanthin:AQdotDsnTakm8And@cluster0.3ftshr3.mongodb.net/nammaooruapp_db?retryWrites=true&w=majority";
+const uri = "mongodb+srv://suhanthin:AQdotDsnTakm8And@cluster0.3ftshr3.mongodb.net/nammaooruapp_db_v1?retryWrites=true&w=majority";
 //const uri = process.env.DATABASE;
-//const uri = "mongodb://0.0.0.0:27017/skvappDB";
+//const uri = "mongodb://0.0.0.0:27017/nammaooruapp_db_v1?replicaSet=myReplicaSet";
 db.mongoose
   .connect(uri, {
     useNewUrlParser: true,
@@ -45,7 +45,7 @@ db.mongoose
 
 // simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to skvchitfund application." });
+  res.json({ message: "Welcome to nammaooruapp application." });
 });
 
 // routes
@@ -98,7 +98,7 @@ function initial() {
 
         console.log("added 'chitadmin' to roles collection");
       });
-      
+
       new Role({
         name: "chitcollectors",
       }).save((err) => {
@@ -122,20 +122,11 @@ function initial() {
   });
 }
 
-// cron.schedule('* * * * *', () => {
-//   var s = new Date().toLocaleString(undefined, {timeZone: 'Asia/Kolkata'});
-//   console.log('Running a job at '+ s +' at Asia/Kolkata timezone');
-//   schedulecronrun(s);
-// });
-
-// function schedulecronrun(s) {
-//   new CronCheck({
-//     remark: "test",
-//     cronRunTime : s
-//   }).save((err) => {
-//     if (err) {
-//       console.log("error", err);
-//     }
-//     console.log("added to Cron Check collection");
-//   });
-// }
+// cronTime:'0 */2 * * * *',  2 mins
+// cronTime:'0 0 1 * *',  1 month
+const { chanthaHistoryCronRun } = require("./app/utils/chanthaHistoryActions");
+cron.schedule("0 0 1 * *", async () => {
+  var s = new Date().toLocaleString(undefined, { timeZone: 'Asia/Kolkata' });
+  console.log('Running a job at ' + s + ' at Asia/Kolkata timezone');
+  chanthaHistoryCronRun()
+});

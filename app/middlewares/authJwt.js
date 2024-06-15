@@ -106,7 +106,7 @@ isSuperadmin = (req, res, next) => {
           res.status(500).send({ message: err });
           return;
         }
-    
+
         Role.find(
           {
             _id: { $in: user.roles },
@@ -116,14 +116,14 @@ isSuperadmin = (req, res, next) => {
               res.status(500).send({ message: err });
               return;
             }
-    
+
             for (let i = 0; i < roles.length; i++) {
               if (roles[i].name == "superadmin") {
                 next();
                 return;
               }
             }
-    
+
             res.status(403).send({ message: "Require superadmin Role!" });
             return;
           }
@@ -145,29 +145,27 @@ isSuperadminorAdmin = (req, res, next) => {
       return err;
     } else {
       User.findById(decoded.id).exec((err, user) => {
-        
         if (err) {
           res.status(500).send({ message: err });
           return;
         }
-    
+
         Role.find(
           {
-            _id: user.roles,
+            name: user.roleName,
           },
           (err, roles) => {
-            
             if (err) {
               res.status(500).send({ message: err });
               return;
             }
             //for (let i = 0; i < roles.length; i++) {
-              if (roles[0].name === "superadmin" || roles[0].name === "admin") {
-                next();
-                return;
-              }
+            if (roles[0].name === "superadmin" || roles[0].name === "admin") {
+              next();
+              return;
+            }
             //}
-    
+
             res.status(403).send({ message: "Require superadmin or admin Role!" });
             return;
           }
@@ -195,10 +193,10 @@ isCheckRolePermission = (req, res, next) => {
         }
 
         //for (let i = 0; i < roles.length; i++) {
-          if (roles.name === "superadmin") {
-            next();
-            return;
-          }
+        if (roles.name === "superadmin") {
+          next();
+          return;
+        }
         //}
 
         res.status(403).send({ message: "Require superadmin Role!" });
@@ -208,7 +206,7 @@ isCheckRolePermission = (req, res, next) => {
   });
 };
 
-ischeckLoggedin = (req,res,next) => {
+ischeckLoggedin = (req, res, next) => {
   let token = req.headers["x-access-token"];
   if (!token) {
     loggedinuserId = "";
@@ -221,15 +219,15 @@ ischeckLoggedin = (req,res,next) => {
       return err;
     } else {
       var condition = {
-        "login_status":"Loggedin",
-        "userId":decoded.id,
+        "login_status": "Loggedin",
+        "userId": decoded.id,
       }
       Loginlogs.find(condition, (err, user) => {
         if (err) {
           res.status(500).send({ message: err });
           return;
         }
-        if(user[0] && user[0]._doc.logoff_time == "") {
+        if (user[0] && user[0]._doc.logoff_time == "") {
           next();
           return;
         } else {

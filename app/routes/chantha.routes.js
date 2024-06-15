@@ -13,36 +13,45 @@ module.exports = function (app) {
   app.post(
     "/api/chantha/create",
     [
-      authJwt.verifyToken, 
-      authJwt.isSuperadminorAdmin  
+      authJwt.verifyToken,
+      authJwt.isSuperadminorAdmin
     ],
     controller.create
   );
 
-  app.get(
+  app.post(
     "/api/chantha/list",
     [
-      authJwt.verifyToken, 
-      authJwt.isSuperadminorAdmin
+      // authJwt.verifyToken, 
+      // authJwt.isSuperadminorAdmin
     ],
     controller.chanthaList
   );
 
   app.get(
-    "/api/chantha/update/:key",
+    "/api/chantha/update",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.update
   );
 
   app.get(
-    "/api/chantha/delete/:key",
+    "/api/chantha/delete",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.delete
+  );
+
+  app.post(
+    "/api/chantha/detail",
+    [
+      authJwt.verifyToken,
+      authJwt.isSuperadminorAdmin
+    ],
+    controller.getChanthaDetail
   );
 };

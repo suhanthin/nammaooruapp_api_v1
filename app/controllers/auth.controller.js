@@ -10,50 +10,44 @@ var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 const IP = require('ip');
 const xlsx = require('xlsx');
-const { createuser, createusercount, loghistory,loghistorylist, userupdate,familymemberscreate,familymembersupdate } = require('../utils/userActions');
+const { createuser, createusercount, loghistory, loghistorylist, userupdate, familymembersupdate } = require('../utils/userActions');
 const pageName = 'user';
 
 exports.signup = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const {  roles,rolesName,isAdministrator,position,isChitCommitteeMember,chitCommitteePosition } = req.body;
+    const { roleName, isAdministrator, position, isChitCommitteeMember, chitCommitteePosition } = req.body;
     let commonPassword = "12345678";
     let hashpassword = bcrypt.hashSync(commonPassword, 8);
     const action = 'create';
-    let userRoles = "";
-    if (rolesName) {
-      try {
-        const importantData = await Role.find(
-          {
-            name: rolesName,
-          }
-        );
-        userRoles = importantData.map((role) => role._id);
-      } catch (exception) {
-        console.log(exception)
-      }
-    } else {
-      try {
-        const importantData = await Role.findOne(
-          { name: "member" }
-        );
-        userRoles = importantData._id;
-      } catch (exception) {
-        console.log(exception)
-      }
-    }
+    // let userRoles = "";
+    // if (roleName) {
+    //   try {
+    //     const importantData = await Role.find(
+    //       {
+    //         name: roleName,
+    //       }
+    //     );
+    //     userRoles = importantData.map((role) => role.name);
+    //   } catch (exception) {
+    //     console.log(exception)
+    //   }
+    // } else {
+    //   try {
+    //     const importantData = await Role.findOne(
+    //       { name: "member" }
+    //     );
+    //     userRoles = importantData.name;
+    //   } catch (exception) {
+    //     console.log(exception)
+    //   }
+    // }
     req.body.password = hashpassword;
-    req.body.roles = userRoles;
-    req.body.rolesName = roles;
+    //req.body.roleName = userRoles;
     const reqBody = req.body;
     const userResult = await Promise.all([
       createusercount(
-        {
-          reqBody, session
-        }
-      ),
-      familymemberscreate(
         {
           reqBody, session
         }
@@ -65,7 +59,7 @@ exports.signup = async (req, res) => {
       ),
       loghistory(
         {
-          req, res,reqBody,action,pageName,session
+          req, res, reqBody, action, pageName, session
         }
       )
     ]);
@@ -87,6 +81,7 @@ exports.signup = async (req, res) => {
       message: 'Member created successfully!'
     })
   } catch (err) {
+    console.log(err)
     await session.abortTransaction();
     session.endSession();
 
@@ -102,117 +97,71 @@ exports.signin = async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   if (!username) {
-    return res.status(400).send({ message: 'User Name required.'});
+    return res.status(400).send({ message: 'User Name required.' });
   }
   if (!password) {
-    return res.status(400).send({ message: 'Password required.'});
+    return res.status(400).send({ message: 'Password required.' });
   }
   User.findOne({
     username: req.body.username,
   })
-  .populate("roles", "-__v")
-  .exec((err, user) => {
-    if (err) {
-      res.status(500).send({ message: err });
-      return;
-    }
-
-    if (!user) {
-      return res.status(400).send({ message: "User Not found." });
-    }
-
-    var passwordIsValid = bcrypt.compareSync(
-      req.body.password,
-      user.password
-    );
-
-    if (!passwordIsValid) {
-      return res.status(400).send({
-        accessToken: null,
-        message: "Invalid Password!",
-      });
-    }
-
-    let userData = {
-      time: Date(),
-      id: user.id,
-    };
-
-    const token = jwt.sign(userData, config.secret, {
-      algorithm: "HS256",
-      allowInsecureKeySizes: true,
-      expiresIn: 86400, // 24 hours
-      //expiresIn: 120,
-    });
-
-    const refreshtoken = jwt.sign(userData, config.refresh_secret, {
-      algorithm: "HS256",
-      allowInsecureKeySizes: true,
-      expiresIn: 2592000, // 1 month
-    });
-
-    var authorities = "";
-    //for (let i = 0; i < user.roles.length; i++) {
-      authorities="ROLE_" + user.roles.name.toUpperCase();
-    //}
-    user.token = token;
-    user.refresh_token = refreshtoken;
-    req.session.token = token;
-    const ipAddress = IP.address();
-    Loginlog.create([{
-      userId: user.id,
-      ip_address: ipAddress,
-      login_status: "Loggedin",
-      login_time: new Date(),
-      logoff_time: ""
-    }]);
-    return res.status(200).json(
-      {
-        "status": "success",
-        "message": "Login successful",
-        id: user._id,
-        username: user.username,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        roles: authorities,
-        rolesName: user.rolesName,
-        memberId: user.memberId,
-        isAdministrator: user.isAdministrator,
-        position: user.position,
-        isChitCommitteeMember: user.isChitCommitteeMember,
-        chitCommitteePosition: user.chitCommitteePosition,
-        phoneno: user.phoneno,
-        fathername: user.fathername,
-        mothername: user.mothername,
-        gender: user.gender,
-        avatar: user.avatar,
-        address: user.address,
-        dob: user.dob,
-        balanceTribute: user.balanceTribute,
-        userType: user.userType,
-        userTypechangedDate: user.userTypechangedDate,
-        usertypeSavedhalf: user.usertypeSavedhalf,
-        maritalStatus: user.maritalStatus,
-        maritalStatusSavedsingle: user.maritalStatusSavedsingle,
-        maritalchangedDate: user.maritalchangedDate,
-        memberType: user.memberType,
-        memberTypeSavedbclass: user.memberTypeSavedbclass,
-        memberTypechangedDate: user.memberTypechangedDate,
-        identityProof: user.identityProof,
-        identityProofNo: user.identityProofNo,
-        nationality: user.nationality,
-        qualification: user.qualification,
-        jobType: user.jobType,
-        jobdetails: user.jobdetails,
-        jobportal: user.jobportal,
-        familyId: user.familyId,
-        status: user.status,
-        remark: user.remark,
-        accessToken: token,
-        refreshToken: refreshtoken,
+    .populate("roleName", "-__v")
+    .exec((err, user) => {
+      if (err) {
+        res.status(500).send({ message: err });
+        return;
       }
-    );
-  });
+
+      if (!user) {
+        return res.status(400).send({ message: "User Not found." });
+      }
+
+      var passwordIsValid = bcrypt.compareSync(
+        req.body.password,
+        user.password
+      );
+
+      if (!passwordIsValid) {
+        return res.status(400).send({
+          accessToken: null,
+          message: "Invalid Password!",
+        });
+      }
+
+      let userData = {
+        time: Date(),
+        id: user.id,
+      };
+
+      const token = jwt.sign(userData, config.secret, {
+        algorithm: "HS256",
+        allowInsecureKeySizes: true,
+        expiresIn: 86400, // 24 hours
+        //expiresIn: 120,
+      });
+
+      const refreshtoken = jwt.sign(userData, config.refresh_secret, {
+        algorithm: "HS256",
+        allowInsecureKeySizes: true,
+        expiresIn: 2592000, // 1 month
+      });
+
+      user.token = token;
+      user.refresh_token = refreshtoken;
+      req.session.token = token;
+      user.accessToken = token;
+      const ipAddress = IP.address();
+      Loginlog.create([{
+        userId: user.id,
+        ip_address: ipAddress,
+        login_status: "Loggedin",
+        login_time: new Date(),
+        logoff_time: ""
+      }]);
+      return res.status(200).json(
+        user
+      );
+    });
 };
 
 exports.signout = async (req, res) => {
@@ -227,8 +176,8 @@ exports.signout = async (req, res) => {
       if (loginlog == null) {
         return res.status(202).send({ message: "You are already signed out!" });
       } else {
-        loginlog.login_status= "Loggedoff",
-        loginlog.logoff_time = new Date();
+        loginlog.login_status = "Loggedoff",
+          loginlog.logoff_time = new Date();
         loginlog.save((err) => {
           if (err) {
             res.status(500).send({ message: err });
@@ -315,7 +264,7 @@ exports.loghistorylist = async (req, res) => {
   session.startTransaction();
   let userDetails = "";
   try {
-    const {pagename} = req.body;
+    const { pagename } = req.body;
     const userResult = await Promise.all([
       loghistorylist(
         {
@@ -323,7 +272,7 @@ exports.loghistorylist = async (req, res) => {
         }
       ),
     ]);
-    
+
     const failedTxns = userResult.filter((result) => result.status !== true);
     if (failedTxns.length) {
       const errors = failedTxns.map(a => a.message);
@@ -333,7 +282,7 @@ exports.loghistorylist = async (req, res) => {
         message: errors
       })
     } else {
-      if(userResult[0].status == true) {
+      if (userResult[0].status == true) {
         userDetails = userResult[0].data
       }
     }
@@ -382,43 +331,15 @@ exports.userupdate = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const {  roles,rolesName,isAdministrator,position,isChitCommitteeMember,chitCommitteePosition } = req.body;
-    // console.log(req.body);
-    // let commonPassword = "12345678";
-    // let hashpassword = bcrypt.hashSync(commonPassword, 8);
+    const { roles, roleName, isAdministrator, position, isChitCommitteeMember, chitCommitteePosition } = req.body;
     const action = 'update';
-    // let userRoles = "";
-    // if (rolesName) {
-    //   try {
-    //     const importantData = await Role.find(
-    //       {
-    //         name: rolesName,
-    //       }
-    //     );
-    //     userRoles = importantData.map((role) => role._id);
-    //   } catch (exception) {
-    //     console.log(exception)
-    //   }
-    // } else {
-    //   try {
-    //     const importantData = await Role.findOne(
-    //       { name: "member" }
-    //     );
-    //     userRoles = importantData._id;
-    //   } catch (exception) {
-    //     console.log(exception)
-    //   }
-    // }
-    // req.body.password = hashpassword;
-    // req.body.roles = userRoles;
-    // req.body.rolesName = roles;
     const reqBody = req.body;
     const userResult = await Promise.all([
-      // createusercount(
-      //   {
-      //     reqBody, session
-      //   }
-      // ),
+      createusercount(
+        {
+          reqBody, session
+        }
+      ),
       userupdate(
         {
           reqBody, session
@@ -436,6 +357,7 @@ exports.userupdate = async (req, res) => {
       // )
     ]);
     const failedTxns = userResult.filter((result) => result.status !== true);
+    console.log(failedTxns)
     if (failedTxns.length) {
       const errors = failedTxns.map(a => a.message);
       await session.abortTransaction();
@@ -453,6 +375,7 @@ exports.userupdate = async (req, res) => {
       message: 'Member updated successfully!'
     })
   } catch (err) {
+    console.log(err)
     await session.abortTransaction();
     session.endSession();
 
