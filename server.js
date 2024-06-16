@@ -22,23 +22,22 @@ app.use(
   })
 );
 
+const mongoose = require("mongoose");
+mongoose.set('strictQuery', false);
+
 const db = require("./app/models");
 const Role = db.role;
 const CronCheck = db.cronCheck;
 const uri = "mongodb+srv://suhanthin:AQdotDsnTakm8And@cluster0.3ftshr3.mongodb.net/nammaooruapp_db_v1?retryWrites=true&w=majority";
 //const uri = process.env.DATABASE;
 //const uri = "mongodb://0.0.0.0:27017/nammaooruapp_db_v1?replicaSet=myReplicaSet";
-
-const mongoose = require("mongoose");
-mongoose.set('strictQuery', false);
-
 db.mongoose
   .connect(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
   .then(() => {
-    console.log("Successfully connected to MongoDB.");
+    console.log("Successfully connect to MongoDB.");
     initial();
   })
   .catch((err) => {
