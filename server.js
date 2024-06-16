@@ -23,7 +23,7 @@ app.use(
 );
 
 const mongoose = require("mongoose");
-mongoose.set('strictQuery', false);
+mongoose.set('strictQuery', true);
 
 const db = require("./app/models");
 const Role = db.role;
