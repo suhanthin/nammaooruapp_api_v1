@@ -163,6 +163,12 @@ const createuser = async ({ reqBody, session }) => {
     isChitCommitteeMember: reqBody.isChitCommitteeMember,
     chitCommitteePosition: reqBody.chitCommitteePosition ? reqBody.chitCommitteePosition : "",
     status: reqBody.status ? reqBody.status : "active",
+    isEnrolledAfterRecord: reqBody.isEnrolledAfterRecord ? reqBody.isEnrolledAfterRecord : false,
+    enrollDate: reqBody.enrollDate ? reqBody.enrollDate : "",
+    enrolledType: reqBody.enrolledType ? reqBody.enrolledType : "",
+    reJoiningDate: reqBody.reJoiningDate ? reqBody.reJoiningDate : "",
+    isChanthaRequired: reqBody.isChanthaRequired ? reqBody.isChanthaRequired : false,
+    statusDismisstoActive: reqBody.status == 'dismiss' ? true : false
   }], { session });
   const createduserId = JSON.parse(JSON.stringify(createduser));
   lastInsertId = createduserId[0]._id;
@@ -323,7 +329,7 @@ const bulkInsert = async ({ req, bulkInsertData, session }) => {
       let itemObject = rev;
       const { roleName } = itemObject;
       let hashpassword = bcrypt.hashSync(itemObject.password.toString(), 8);
-      const action = 'create';
+      const action = 'BulkInsert';
       let userRoles = "";
       if (roleName) {
         try {
@@ -444,6 +450,12 @@ const bulkInsert = async ({ req, bulkInsertData, session }) => {
         chitCommitteePosition: itemObject.chitCommitteePosition ? itemObject.chitCommitteePosition : "",
         balanceTribute: itemObject.balanceTribute ? itemObject.balanceTribute : 0,
         status: itemObject.status ? itemObject.status : "",
+        enrollDate: itemObject.enrollDate ? itemObject.enrollDate : "",
+        enrolledType: itemObject.enrolledType ? itemObject.enrolledType : "",
+        reJoiningDate: itemObject.reJoiningDate ? itemObject.reJoiningDate : "",
+        isChanthaRequired: itemObject.isChanthaRequired ? itemObject.isChanthaRequired : false,
+        isEnrolledAfterRecord: itemObject.isEnrolledAfterRecord ? itemObject.isEnrolledAfterRecord : false,
+        statusDismisstoActive: itemObject.status == 'dismiss' ? true : false
       }], { session });
       const createduserId = JSON.parse(JSON.stringify(createduser));
       bulkLastInsertID = createduserId[0]._id;
@@ -454,8 +466,8 @@ const bulkInsert = async ({ req, bulkInsertData, session }) => {
       const loghistory = await Loghistory.create([{
         userId: loggedinuserId ? loggedinuserId : "",
         recordId: bulkLastInsertID,
-        existingvalue: action == "create" ? "" : JSON.stringify(differ.old[0]),
-        changedvalue: action == "create" ? JSON.stringify(itemObject) : JSON.stringify(differ.new[0]),
+        existingvalue: action == "BulkInsert" ? "" : JSON.stringify(differ.old[0]),
+        changedvalue: action == "BulkInsert" ? JSON.stringify(itemObject) : JSON.stringify(differ.new[0]),
         action: action,
         pagename: pageName
       }], { session });

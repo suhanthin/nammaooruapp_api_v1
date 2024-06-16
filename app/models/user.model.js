@@ -131,10 +131,15 @@ const User = mongoose.model(
     updated_at: { type: Date },
     created_by: String,
     updated_by: String,
+    isEnrolledAfterRecord: Boolean,
     enrollDate: String,
     enrolledType: String,
     reJoiningDate: String,
-    isChanthaRequired: Boolean
+    isChanthaRequired: Boolean,
+    statusDismisstoActive: {
+      type: Boolean,
+      default: false
+    },
   }, { timestamps: true })
 );
 

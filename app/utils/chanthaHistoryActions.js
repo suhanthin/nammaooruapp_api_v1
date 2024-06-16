@@ -178,12 +178,22 @@ function dateformat(date) {
 
 const chanthaHistoryCronRun = async () => {
   const query = {
-    status: 'active',
-    type: 'full',
-    status: { $nin: ['death', 'dismiss'] },
-    gender: { $ne: 'female' },
-    type: { $nin: 'half' },
-    mamberType: { $nin: ['b-class', 'c-class'] }
+    $and: [
+      { status: 'active' },
+      { userType: { $ne: 'half' } },
+      { memberType: 'a-class' },
+      {
+        $or: [
+          {
+            $and: [
+              { gender: 'female' },
+              { isChanthaRequired: true }
+            ]
+          },
+          { gender: 'male' }
+        ]
+      }
+    ]
   };
   const combinedQuery = {
     $or: [
@@ -211,7 +221,8 @@ async function createChanthaHistory(user, chanthaData) {
   const chanthaHistoryData = {
     chantha_id: chanthaData._id,
     user_id: user._id,
-    addedDate: dateformat(new Date()),
+    // addedDate: dateformat(new Date()),
+    addedDate: "01-06-2024",
     amount: chanthaData.amount,
     effectiveDate: chanthaData.effectiveDate,
     created_by: "superadmin",
