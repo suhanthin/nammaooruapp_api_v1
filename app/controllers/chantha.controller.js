@@ -27,7 +27,7 @@ exports.create = async (req, res) => {
       await session.abortTransaction();
       return res.status(400).json({
         status: false,
-        message: errors
+        message: errors[0]
       })
     }
 
@@ -54,7 +54,7 @@ exports.update = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const _id = req.params.key;
+    const _id = req.body.id;
     const reqBody = req.body;
     const action = 'update';
     req.body.token = req.headers["x-access-token"];
@@ -104,8 +104,10 @@ exports.delete = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const _id = req.params.key;
-    req.body.status = "deleted";
+    const _id = req.query._id;
+    const reason = req.query.reason;
+    req.body.status = "delete";
+    req.body.remark = reason;
     const reqBody = req.body;
     const action = 'delete';
 

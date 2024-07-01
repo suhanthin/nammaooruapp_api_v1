@@ -168,7 +168,8 @@ const createuser = async ({ reqBody, session }) => {
     enrolledType: reqBody.enrolledType ? reqBody.enrolledType : "",
     reJoiningDate: reqBody.reJoiningDate ? reqBody.reJoiningDate : "",
     isChanthaRequired: reqBody.isChanthaRequired ? reqBody.isChanthaRequired : false,
-    statusDismisstoActive: reqBody.status == 'dismiss' ? true : false
+    statusDismisstoActive: reqBody.status == 'dismiss' ? true : false,
+    jobProfessional: reqBody.jobProfessional ? reqBody.jobProfessional : ''
   }], { session });
   const createduserId = JSON.parse(JSON.stringify(createduser));
   lastInsertId = createduserId[0]._id;
@@ -206,95 +207,6 @@ const userslist = async ({ usersListquery, session }) => {
     statusCode: 201,
     message: 'User List Details',
     data: UsersData
-  }
-}
-
-const edituser = async ({ _id, reqBody, session }) => {
-  const existingvalueData = await Users.findOne({ _id });
-  existingvalueJson.username = existingvalueData.username;
-  existingvalueJson.password = existingvalueData.password;
-  existingvalueJson.roles = existingvalueData.roles;
-  existingvalueJson.isAdministrator = existingvalueData.isAdministrator;
-  existingvalueJson.position = existingvalueData.position;
-  existingvalueJson.memberId = existingvalueData.memberId;
-  existingvalueJson.firstname = existingvalueData.firstname;
-  existingvalueJson.lastname = existingvalueData.lastname;
-  existingvalueJson.phoneno = existingvalueData.phoneno;
-  existingvalueJson.fathername = existingvalueData.fathername;
-  existingvalueJson.mothername = existingvalueData.mothername;
-  existingvalueJson.gender = existingvalueData.gender;
-  existingvalueJson.avatar = existingvalueData.avatar;
-  existingvalueJson.address = existingvalueData.address;
-  existingvalueJson.dob = existingvalueData.dob;
-  existingvalueJson.balanceTribute = existingvalueData.balanceTribute;
-  existingvalueJson.userType = existingvalueData.userType;
-  existingvalueJson.userTypechangedDate = existingvalueData.userTypechangedDate;
-  existingvalueJson.usertypeSavedhalf = existingvalueData.usertypeSavedhalf;
-  existingvalueJson.memberType = existingvalueData.memberType;
-  existingvalueJson.memberTypeSavedbclass = existingvalueData.memberTypeSavedbclass;
-  existingvalueJson.memberTypechangedDate = existingvalueData.memberTypechangedDate;
-  existingvalueJson.maritalStatus = existingvalueData.maritalStatus;
-  existingvalueJson.maritalStatusSavedsingle = existingvalueData.maritalStatusSavedsingle;
-  existingvalueJson.maritalchangedDate = existingvalueData.maritalchangedDate;
-  existingvalueJson.remark = existingvalueData.remark;
-  existingvalueJson.identityProof = existingvalueData.identityProof;
-  existingvalueJson.identityProofNo = existingvalueData.identityProofNo;
-  existingvalueJson.status = existingvalueData.status;
-  existingvalueJson.nationality = existingvalueData.nationality;
-  existingvalueJson.qualification = existingvalueData.qualification;
-  existingvalueJson.jobType = existingvalueData.jobType;
-  existingvalueJson.jobportal = existingvalueData.jobportal;
-  existingvalueJson.jobdetails = existingvalueData.jobdetails;
-  existingvalueJson.familyId = existingvalueData.familyId;
-  existingvalueJson.isChitCommitteeMember = existingvalueData.isChitCommitteeMember;
-  existingvalueJson.chitCommitteePosition = existingvalueData.chitCommitteePosition ? existingvalueData.chitCommitteePosition : "";
-
-  const usercount = await MemberTypeCount.find();
-  let a_classMembercount = "";
-  let b_classMembercount = "";
-  let c_classMembercount = "";
-  if (reqBody.memberTypeSavedbclass == 'yes') {
-    if (usercount.length > 0) {
-      if (reqBody.memberType == 'a-class') {
-        a_classMembercount = padDigits(usercount[0].a_class + 1, 4);
-      } else if (reqBody.memberType == 'b-class') {
-        b_classMembercount = padDigits(usercount[0].b_class + 1, 4);
-      }
-    }
-
-    if (reqBody.memberType == 'b-class') {
-      reqBody.memberId = "B" + b_classMembercount;
-    } else if (reqBody.memberType == 'a-class') {
-      reqBody.memberId = "A" + a_classMembercount;
-      if (usercount.length > 0) {
-        usercount.map(item => {
-          if (reqBody.memberType == 'a-class') {
-            item.a_class = item.a_class + 1;
-          }
-          item.save();
-        })
-      }
-    }
-  }
-
-  if (reqBody.type == 'full') {
-    reqBody.usertypeSavedhalf = 'no';
-  }
-  if (reqBody.maritalStatus == 'married' || reqBody.maritalStatus == 'widowed') {
-    reqBody.maritalStatusSavedsingle = 'no';
-  }
-  if (reqBody.memberType == 'a-class') {
-    reqBody.memberTypeSavedbclass = 'no';
-  }
-
-  const updatedcontroller = await Users.findOneAndUpdate({ _id }, { $set: reqBody }, { session })
-  const updatedcontrollerId = JSON.parse(JSON.stringify(updatedcontroller));
-  lastInsertId = updatedcontrollerId._id;
-
-  return {
-    status: true,
-    statusCode: 201,
-    data: { updatedcontroller }
   }
 }
 
@@ -455,7 +367,8 @@ const bulkInsert = async ({ req, bulkInsertData, session }) => {
         reJoiningDate: itemObject.reJoiningDate ? itemObject.reJoiningDate : "",
         isChanthaRequired: itemObject.isChanthaRequired ? itemObject.isChanthaRequired : false,
         isEnrolledAfterRecord: itemObject.isEnrolledAfterRecord ? itemObject.isEnrolledAfterRecord : false,
-        statusDismisstoActive: itemObject.status == 'dismiss' ? true : false
+        statusDismisstoActive: itemObject.status == 'dismiss' ? true : false,
+        jobProfessional: itemObject.jobProfessional ? itemObject.jobProfessional : ''
       }], { session });
       const createduserId = JSON.parse(JSON.stringify(createduser));
       bulkLastInsertID = createduserId[0]._id;
@@ -542,7 +455,7 @@ const getuserDetail = async ({ _id, session }) => {
     let familyMembers = [];
     const familyData = await FamilyDetails.findOne({ member_Id: _id }).exec();
     if (familyData) {
-      familyMembers = await FamilyDetails.find({ familyId: familyData.familyId }).sort({ subId: 1 }).exec();
+      familyMembers = await FamilyDetails.find({ familyId: familyData.familyId, isDelete: false }).sort({ subId: 1 }).exec();
     }
     // Convert data to plain JavaScript object
     data = data.toObject();
@@ -699,14 +612,10 @@ const userupdate = async ({ reqBody, session }) => {
     if (usercount.length > 0) {
       if (parsedData.memberType == 'a-class') {
         a_classMembercount = padDigits(usercount[0].a_class + 1, 4);
-      } else if (parsedData.memberType == 'b-class') {
-        b_classMembercount = padDigits(usercount[0].b_class + 1, 4);
       }
     }
 
-    if (parsedData.memberType == 'b-class') {
-      parsedData.memberId = "B" + b_classMembercount;
-    } else if (parsedData.memberType == 'a-class') {
+    if (parsedData.memberType == 'a-class') {
       parsedData.memberId = "A" + a_classMembercount;
       if (usercount.length > 0) {
         usercount.map(item => {
@@ -743,8 +652,6 @@ const familymembersupdate = async ({ reqBody, session }) => {
   console.log(reqBody);
   await timeout(3000);
   const parsedData = reqBody.familyMembers;
-  const _id = parsedData._id;
-  const userparsedData = JSON.parse(reqBody.user);
   if (parsedData.length > 0) {
     try {
       for (const record of parsedData) {
@@ -843,6 +750,39 @@ const familymembersupdate = async ({ reqBody, session }) => {
   }
 }
 
+const customMemberList = async ({ reqBody, session }) => {
+  let userData = [];
+  const query = {
+    $and: [
+      { status: 'active' },
+      { userType: { $ne: 'half' } },
+      { memberType: 'a-class' },
+      {
+        $or: [
+          {
+            $and: [
+              { gender: 'female' },
+              { isChanthaRequired: true }
+            ]
+          },
+          { gender: 'male' }
+        ]
+      }
+    ]
+  };
+  const combinedQuery = {
+    $or: [
+      query
+    ]
+  };
+  userData = await User.find(combinedQuery).sort({ memberId: 1 }).select('_id memberId firstname lastname status');;
+  return {
+    status: true,
+    statusCode: 201,
+    data: userData
+  };
+}
+
 function filter(obj1, obj2) {
   var result1 = {};
   var result2 = {};
@@ -890,5 +830,5 @@ function removeStringSpace(str) {
 }
 
 module.exports = {
-  createuser, createusercount, userslist, edituser, deleteuser, loghistory, loghistorylist, bulkInsert, getuserDetail, userSearch, userupdate, familymembersupdate, administratorList
+  createuser, createusercount, userslist, deleteuser, loghistory, loghistorylist, bulkInsert, getuserDetail, userSearch, userupdate, familymembersupdate, administratorList, customMemberList
 };

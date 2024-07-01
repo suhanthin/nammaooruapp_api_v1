@@ -221,8 +221,8 @@ async function createChanthaHistory(user, chanthaData) {
   const chanthaHistoryData = {
     chantha_id: chanthaData._id,
     user_id: user._id,
-    // addedDate: dateformat(new Date()),
-    addedDate: "01-06-2024",
+    addedDate: dateformat(new Date()),
+    //addedDate: "01-06-2024",
     amount: chanthaData.amount,
     effectiveDate: chanthaData.effectiveDate,
     created_by: "superadmin",

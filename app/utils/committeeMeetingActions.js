@@ -4,154 +4,143 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
 const Users = db.user;
 const Loghistory = db.loghistory;
-const committeeMeeting = db.committeeMeeting;
-const committeeMeetingHistory = db.committeeMeetingHistory;
-var lastInsertId = "";
+const CommitteeMeeting = db.committeeMeeting;
+const CommitteeMeetingHistory = db.committeeMeetingHistory;
+const ObjectId = require('mongodb').ObjectId;
+const util = require('util');
+const verifyJwt = util.promisify(jwt.verify);
+const { getUserDetails } = require('./chanthaActions.js');
+
+let lastInsertId = "";
 let changedvalueJson = {};
 let existingvalueJson = {};
 let loggedinuserId = "";
-var ObjectId = require('mongodb').ObjectId;
 
-const createcommitteeMeeting = async ({ reqBody, session }) => {
-  const createdcommitteeMeeting = await committeeMeeting.create([{
-    isAddAttendance:reqBody.isAddAttendance,
-    fineAmount:reqBody.fineAmount,
-    meetingDate:reqBody.meetingDate,
-    description:reqBody.description
+const createCommitteeMeeting = async ({ reqBody, session }) => {
+  const createdCommitteeMeeting = await CommitteeMeeting.create([{
+    isAddAttendance: reqBody.isAddAttendance,
+    title: reqBody.title,
+    fineAmount: reqBody.fineAmount,
+    meetingDate: reqBody.meetingDate,
+    description: reqBody.description,
+    remark: reqBody.remark
   }], { session });
-  const createdcommitteeMeetingId = JSON.parse(JSON.stringify(createdcommitteeMeeting));
-  lastInsertId = createdcommitteeMeetingId[0]._id;
+  lastInsertId = createdCommitteeMeeting[0]._id;
   return {
     status: true,
     statusCode: 201,
-    message: 'committeeMeeting is created successful',
-    data: { createdcommitteeMeeting }
-  }
+    message: 'Committee meeting created successfully',
+    data: { createdCommitteeMeeting }
+  };
 }
 
-const createcommitteeMeetingHistory = async ({ reqBody, session }) => {
+const createCommitteeMeetingHistory = async ({ reqBody, session }) => {
   await timeout(3000);
   const userDetails = reqBody.userDetails;
   let committeeMeetingHistoryData = [];
-  
+
   userDetails.forEach(object => {
-    let paystatus = "";
-    if(object.attendance == true){
-      paystatus = "no fine";
-    } else {
-      paystatus = "unpaid"
-    }
     let sample = {
-      committeeMeeting_id:new ObjectId(lastInsertId),
-      user_id:new ObjectId(object._id),
-      attendance:reqBody.isAddAttendance == true ? object.attendance : true,
-      paystatus:paystatus,
-      payee_id:"",
-      paidDate:"",
-      description:"",
-    }
+      committeeMeeting_id: new ObjectId(lastInsertId),
+      user_id: new ObjectId(object._id),
+      attendance: reqBody.isAddAttendance ? object.attendance : false,
+      paystatus: paystatus,
+      payee_id: "",
+      paidDate: "",
+      description: object.description,
+    };
     committeeMeetingHistoryData.push(sample);
   });
-  const result = await committeeMeetingHistory.insertMany(committeeMeetingHistoryData, {session});
+
+  const result = await CommitteeMeetingHistory.insertMany(committeeMeetingHistoryData, { session });
   return {
     status: true,
     statusCode: 201,
-    message: 'committeeMeeting is created successful',
+    message: 'Committee meeting history created successfully',
     data: { result }
-  }
+  };
 }
 
-const committeeMeetingList = async ({ status , session }) => {
-  const committeeMeetingData = await committeeMeeting.find(
-    {
-      status: status,
-    }
-  );
+const committeeMeetingList = async ({ status }) => {
+  const committeeMeetingData = await CommitteeMeeting.find({ status }).sort({ meetingDate: -1 });
   return {
     status: true,
-    statusCode: 201,
+    statusCode: 200,
     data: committeeMeetingData
-  }
+  };
 }
 
-const committeeMeetingpaystatusList = async ({ mettingListquery , session }) => {
-  const query = {$and: mettingListquery};
-  const UsersData = await committeeMeetingHistory.find(query);
+const committeeMeetingPayStatusList = async ({ meetingListQuery }) => {
+  const query = { $and: meetingListQuery };
+  const usersData = await CommitteeMeetingHistory.find(query);
   return {
     status: true,
-    statusCode: 201,
-    message: 'committee Meeting History List Details',
-    data: UsersData
-  }
-  
+    statusCode: 200,
+    message: 'Committee Meeting History List Details',
+    data: usersData
+  };
 }
 
-const editcommitteeMeeting = async ({_id,reqBody,session}) => {
-  const existingvalueData = await committeeMeeting.findOne({ _id });
-  existingvalueJson.isAddAttendance = existingvalueData.isAddAttendance;
-  existingvalueJson.fineAmount = existingvalueData.fineAmount;
-  existingvalueJson.meetingDate = existingvalueData.meetingDate;
-  existingvalueJson.status = existingvalueData.status;
-  existingvalueJson.description = existingvalueData.description;
-  const updatedcommitteeMeeting = await committeeMeeting.findOneAndUpdate({_id}, {$set: reqBody},{session})
-  const updatedcommitteeMeetingId = JSON.parse(JSON.stringify(updatedcommitteeMeeting));
-  lastInsertId = updatedcommitteeMeetingId._id;
+const editCommitteeMeeting = async ({ _id, reqBody, session }) => {
+  const existingValueData = await CommitteeMeeting.findById(_id);
+  Object.assign(existingvalueJson, existingValueData.toObject());
+
+  const updatedCommitteeMeeting = await CommitteeMeeting.findByIdAndUpdate(_id, { $set: reqBody }, { new: true, session });
+  lastInsertId = updatedCommitteeMeeting._id;
 
   return {
     status: true,
-    statusCode: 201,
-    data: { updatedcommitteeMeeting }
-  }
+    statusCode: 200,
+    data: { updatedCommitteeMeeting }
+  };
 }
 
-const deletecommitteeMeeting = async ({_id,reqBody,session}) => {
-  const existingvalueData = await committeeMeeting.findOne({ _id });
-  existingvalueJson.isAddAttendance = existingvalueData.isAddAttendance;
-  existingvalueJson.fineAmount = existingvalueData.fineAmount;
-  existingvalueJson.meetingDate = existingvalueData.meetingDate;
-  existingvalueJson.status = existingvalueData.status;
-  existingvalueJson.description = existingvalueData.description;
-  const updatedcommitteeMeeting = await committeeMeeting.findOneAndUpdate({_id}, {$set: reqBody}, { session })
-  const updatedcommitteeMeetingId = JSON.parse(JSON.stringify(updatedcommitteeMeeting));
-  lastInsertId = updatedcommitteeMeetingId._id;
+const deleteCommitteeMeeting = async ({ _id, reqBody, session }) => {
+  const existingValueData = await CommitteeMeeting.findById(_id);
+  Object.assign(existingvalueJson, existingValueData.toObject());
+
+  const deletedCommitteeMeeting = await CommitteeMeeting.findByIdAndUpdate(_id, { $set: reqBody }, { new: true, session });
+  lastInsertId = deletedCommitteeMeeting._id;
 
   return {
     status: true,
-    statusCode: 201,
-    data: { updatedcommitteeMeeting }
-  }
+    statusCode: 200,
+    data: { deletedCommitteeMeeting }
+  };
 }
 
-const deletecommitteeMeetingHistory = async ({_id,reqBody,session}) => {
-  const query = {"committeeMeeting_id":_id};
-  const committeeMeetingHistoryData = await committeeMeetingHistory.find(query);
-  if(committeeMeetingHistoryData.length > 0) {
-    committeeMeetingHistoryData.map(item => {
+const deleteCommitteeMeetingHistory = async ({ _id, reqBody }) => {
+  const query = { committeeMeeting_id: _id };
+  const committeeMeetingHistoryData = await CommitteeMeetingHistory.find(query);
+
+  if (committeeMeetingHistoryData.length > 0) {
+    committeeMeetingHistoryData.forEach(async (item) => {
       item.status = "deleted";
       item.description = reqBody.description;
-      item.save();
-    })
+      await item.save();
+    });
   }
+
   return {
     status: true,
-    statusCode: 201,
-    message: 'committee Meeting History Details deleted successfuly!.',
-  }
+    statusCode: 200,
+    message: 'Committee Meeting History Details deleted successfully',
+  };
 }
 
-const loghistory = async ({ req, res,reqBody,action,pageName,session }) => {
+const logHistory = async ({ req, res, reqBody, action, pageName, session }) => {
   await timeout(3000);
   const differ = filter(existingvalueJson, reqBody);
-  checkLogedinuserId(req,res);
+  checkLogedinuserId(req, res);
   const loghistory = await Loghistory.create([{
-    userId:loggedinuserId,
+    userId: loggedinuserId,
     recordId: lastInsertId,
     existingvalue: JSON.stringify(differ.old[0]),
     changedvalue: action == "create" ? JSON.stringify(reqBody) : JSON.stringify(differ.new[0]),
-    action:action,
+    action: action,
     pagename: pageName
   }], { session });
-  
+
   return {
     status: true,
     statusCode: 201,
@@ -159,22 +148,74 @@ const loghistory = async ({ req, res,reqBody,action,pageName,session }) => {
   }
 }
 
+const getCommitteeMeetingDetail = async ({ reqBody, session }) => {
+  try {
+    let _id = reqBody._id;
+    const data = await CommitteeMeeting.findOne({ _id });
+
+    if (!data) {
+      return {
+        status: false,
+        statusCode: 404,
+        message: "Committee not found"
+      };
+    }
+
+    let committeeMeetingHistory = await CommitteeMeetingHistory.find({ committeeMeeting_id: _id })
+      .sort({ _id: 1 })  // Sort by user_id in ascending order
+      .exec();
+
+    // Fetch all user details concurrently
+    const userDetailPromises = committeeMeetingHistory.map(async history => {
+      const userDetails = await Users.findOne({ _id: history.user_id }).lean();
+      const payeeDetails = history.payee_id ? await Users.findOne({ _id: history.payee_id }).lean() : null;
+
+      const historyObj = history.toObject();
+      if (userDetails) {
+        historyObj.memberId = userDetails.memberId;
+        historyObj.firstname = userDetails.firstname;
+        historyObj.lastname = userDetails.lastname;
+        historyObj.phoneno = userDetails.phoneno;
+      }
+      if (payeeDetails) {
+        historyObj.payeefirstname = payeeDetails.firstname;
+        historyObj.payeelastname = payeeDetails.lastname;
+        historyObj.payeeposition = payeeDetails.position;
+      }
+      return historyObj;
+    });
+
+    committeeMeetingHistory = await Promise.all(userDetailPromises);
+    const resultData = data.toObject();
+    resultData.committeeMeetingHistory = committeeMeetingHistory;
+    return {
+      status: true,
+      statusCode: 201,
+      data: { resultData }
+    };
+  } catch (error) {
+    return {
+      status: false,
+      statusCode: 500,
+      message: error.message
+    };
+  }
+};
+
 function filter(obj1, obj2) {
-  var result1 = {};
-  var result2 = {};
-  
-  let result = [];
-  result.old = []; 
-  result.new = []; 
-  
-  for(key in obj1) {
-    if(obj2[key] != obj1[key]){
+  let result1 = {};
+  let result2 = {};
+
+  let result = { old: [], new: [] };
+
+  for (let key in obj1) {
+    if (obj2[key] !== obj1[key]) {
       result1[key] = obj1[key];
       result2[key] = obj2[key];
-    } 
+    }
   }
-  result.old.push(result1); 
-  result.new.push(result2); 
+  result.old.push(result1);
+  result.new.push(result2);
   return result;
 }
 
@@ -182,9 +223,9 @@ function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function checkLogedinuserId(req){
+function checkLogedinuserId(req) {
   let token = req.headers["x-access-token"];
-  
+
   if (!token) {
     return res.status(403).send({ message: "No token provided!" });
   }
@@ -203,5 +244,13 @@ function checkLogedinuserId(req){
 }
 
 module.exports = {
-  createcommitteeMeeting, committeeMeetingList, editcommitteeMeeting, deletecommitteeMeeting,deletecommitteeMeetingHistory, loghistory, createcommitteeMeetingHistory,committeeMeetingpaystatusList
+  createCommitteeMeeting,
+  committeeMeetingList,
+  editCommitteeMeeting,
+  deleteCommitteeMeeting,
+  deleteCommitteeMeetingHistory,
+  logHistory,
+  createCommitteeMeetingHistory,
+  committeeMeetingPayStatusList,
+  getCommitteeMeetingDetail
 };

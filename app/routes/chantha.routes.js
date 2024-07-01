@@ -22,13 +22,13 @@ module.exports = function (app) {
   app.post(
     "/api/chantha/list",
     [
-      // authJwt.verifyToken, 
-      // authJwt.isSuperadminorAdmin
+      authJwt.verifyToken,
+      authJwt.isSuperadminorAdmin
     ],
     controller.chanthaList
   );
 
-  app.get(
+  app.post(
     "/api/chantha/update",
     [
       authJwt.verifyToken,

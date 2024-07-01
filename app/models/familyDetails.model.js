@@ -73,7 +73,11 @@ const familyDetails = mongoose.model(
         updated_by: String,
         family_isaddBelowMember: {
             type: Boolean
-        }
+        },
+        isDelete: {
+            type: Boolean,
+            default: false
+        },
     }, { timestamps: true })
 );
 

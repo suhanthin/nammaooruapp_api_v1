@@ -15,32 +15,54 @@ const ObjectId = require('mongodb').ObjectId;
 const mongoose = require('mongoose');
 
 const createchantha = async ({ reqBody, session }) => {
-  const createdchantha = await chantha.create([{
-    amount: reqBody.amount,
-    effectiveDate: reqBody.effectiveDate,
-    status: reqBody.status,
-    remark: reqBody.remark
-  }], { session });
-  const createdchanthaId = JSON.parse(JSON.stringify(createdchantha));
-  lastInsertId = createdchanthaId[0]._id;
-  return {
-    status: true,
-    statusCode: 201,
-    message: 'chantha is created successful',
-    data: { createdchantha }
+  const activeChanthaData = await chantha.find({ status: 'active' });
+  if (activeChanthaData.length == 0) {
+    const createdchantha = await chantha.create([{
+      amount: reqBody.amount,
+      effectiveDate: reqBody.effectiveDate,
+      status: 'active',
+      remark: reqBody.remark
+    }], { session });
+    const createdchanthaId = JSON.parse(JSON.stringify(createdchantha));
+    lastInsertId = createdchanthaId[0]._id;
+    return {
+      status: true,
+      statusCode: 201,
+      message: 'chantha is created successful',
+      data: { createdchantha }
+    }
+  } else {
+    return {
+      status: false,
+      statusCode: 400,
+      message: 'One chantha is already active. Please close or delete the active chantha and then create a new one',
+      data: {}
+    }
   }
 }
 
 const chanthaList = async ({ status, session }) => {
-  const chanthaData = await chantha.find();
+  const chanthaQuery = {
+    $and: [
+      { "status": { $ne: "delete" } } // This line ensures that status is not "delete"
+    ]
+  };
+
+  const chanthaData = await chantha.find(chanthaQuery).sort({ _id: -1 });
+
   return {
     status: true,
     statusCode: 201,
     data: chanthaData
-  }
-}
+  };
+};
 
 const editchantha = async ({ _id, reqBody, session }) => {
+  // const activeChanthaData = await chantha.find({ status: 'active' });
+  // const sampleId = activeChanthaData[0]._id.toString();
+  // if(sampleId == _id) {
+
+  // }
   const existingvalueData = await chantha.findOne({ _id });
   existingvalueJson.amount = existingvalueData.amount;
   existingvalueJson.effectiveDate = existingvalueData.effectiveDate;
@@ -124,6 +146,7 @@ const groupByAddedDate = async (chantha_id) => {
 };
 
 const getUserDetails = async (user_id) => {
+  console.log('user_id', user_id)
   try {
     const user = await Users.findOne({ _id: user_id });
     return user ? user.toObject() : null;

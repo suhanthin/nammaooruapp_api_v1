@@ -46,11 +46,11 @@ module.exports = function (app) {
   app.post(
     "/api/user/bulkInsert",
     [
-      // authJwt.verifyToken, 
-      // verifySignUp.checkDuplicateUsername,
-      // verifySignUp.checkRolesExisted,
-      // authJwt.ischeckLoggedin,
-      // authJwt.isSuperadminorAdmin
+      authJwt.verifyToken,
+      verifySignUp.checkDuplicateUsername,
+      verifySignUp.checkRolesExisted,
+      authJwt.ischeckLoggedin,
+      authJwt.isSuperadminorAdmin
     ],
     controller.bulkInsert
   );
@@ -58,7 +58,7 @@ module.exports = function (app) {
   app.post(
     "/api/user/detail/",
     [
-      // authJwt.verifyToken, 
+      // authJwt.verifyToken,
       // authJwt.ischeckLoggedin,
       // authJwt.isSuperadminorAdmin
     ],
@@ -68,9 +68,9 @@ module.exports = function (app) {
   app.post(
     "/api/user/search/",
     [
-      // authJwt.verifyToken, 
-      // authJwt.ischeckLoggedin,
-      // authJwt.isSuperadminorAdmin
+      authJwt.verifyToken,
+      authJwt.ischeckLoggedin,
+      authJwt.isSuperadminorAdmin
     ],
     controller.usersearch
   );
@@ -78,9 +78,17 @@ module.exports = function (app) {
   app.post(
     "/api/administratorList",
     [
-      // authJwt.verifyToken, 
-      // authJwt.isSuperadminorAdmin
+      authJwt.verifyToken,
+      authJwt.isSuperadminorAdmin
     ],
     controller.administratorList
+  );
+
+  app.post("/api/user/customMemberList",
+    [
+      authJwt.verifyToken,
+      authJwt.isSuperadminorAdmin
+    ],
+    controller.customMemberList
   );
 };

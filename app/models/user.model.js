@@ -120,6 +120,7 @@ const User = mongoose.model(
       required: [function () { return this.jobType == 'Govt' }, "job portal required"]
     },
     jobdetails: String,
+    jobProfessional: String,
     familyId: String,
     status: {
       type: String,

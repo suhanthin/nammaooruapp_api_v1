@@ -1,137 +1,145 @@
 const mongoose = require('mongoose');
 const pageName = 'committeeMeeting';
-const { createcommitteeMeeting,createcommitteeMeetingHistory,editcommitteeMeeting,deletecommitteeMeetingHistory,deletecommitteeMeeting,committeeMeetingList,loghistory,committeeMeetingpaystatusList } = require('../utils/committeeMeetingActions');
+const { createCommitteeMeeting,
+  committeeMeetingList,
+  editCommitteeMeeting,
+  deleteCommitteeMeeting,
+  deleteCommitteeMeetingHistory,
+  logHistory,
+  createCommitteeMeetingHistory,
+  committeeMeetingPayStatusList,
+  getCommitteeMeetingDetail } = require('../utils/committeeMeetingActions');
 
 exports.create = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const reqBody = req.body;
-      const action = 'create';
-      const createcontrollerResult = await Promise.all([
-        createcommitteeMeeting(
-          {
-            reqBody, session
-          }
-        ),
-        createcommitteeMeetingHistory(
-          {
-            reqBody, session
-          }
-        ),
-        loghistory(
-            {
-              req, res,reqBody,action,pageName,session
-            }
-        )
-      ]);
-      
-      const failedTxns = createcontrollerResult.filter((result) => result.status !== true);
-      if (failedTxns.length) {
-        const errors = failedTxns.map(a => a.message);
-        await session.abortTransaction();
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  let headersSent = false;
+
+  try {
+    const reqBody = req.body;
+    const action = 'create';
+    const createcontrollerResult = await Promise.all([
+      createCommitteeMeeting({ reqBody, session }),
+      createCommitteeMeetingHistory({ reqBody, session }),
+      //logHistory({ req, res, reqBody, action, pageName, session })
+    ]);
+    console.log(createcontrollerResult)
+    const failedTxns = createcontrollerResult.filter((result) => result.status !== true);
+    if (failedTxns.length) {
+      const errors = failedTxns.map(a => a.message);
+      await session.abortTransaction();
+
+      if (!headersSent) {
+        headersSent = true;
         return res.status(400).json({
           status: false,
           message: errors
-        })
+        });
       }
-  
-      await session.commitTransaction();
-      session.endSession();
-  
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    if (!headersSent) {
+      headersSent = true;
       return res.status(201).json({
         status: true,
-        message: 'committee Meeting was created successfully!'
-      })
-    } catch (err) {
-      await session.abortTransaction();
-      session.endSession();
-  
+        message: 'Committee meeting was created successfully!'
+      });
+    }
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
+    if (!headersSent) {
+      headersSent = true;
       return res.status(500).json({
         status: false,
         message: `${err}`,
         err
-      })
+      });
     }
-}
+  }
+};
 
 exports.update = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const _id  = req.params.key;
-      const reqBody = req.body;
-      const action = 'update';
-      req.body.token = req.headers["x-access-token"];
-      const createcontrollerResult = await Promise.all([
-        editcommitteeMeeting(
-          {
-            _id,reqBody,session
-          }
-        ),
-        loghistory(
-            {
-              req, res,reqBody,action,pageName,session
-            }
-        )
-      ]);
-      
-      const failedTxns = createcontrollerResult.filter((result) => result.status !== true);
-      if (failedTxns.length) {
-        const errors = failedTxns.map(a => a.message);
-        await session.abortTransaction();
-        return res.status(400).json({
-          status: false,
-          message: errors
-        })
-      }
-  
-      await session.commitTransaction();
-      session.endSession();
-  
-      return res.status(201).json({
-        status: true,
-        message: 'committeeMeeting is Updated successfully!'
-      })
-    } catch (err) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const _id = req.params.key;
+    const reqBody = req.body;
+    const action = 'update';
+    req.body.token = req.headers["x-access-token"];
+    const createcontrollerResult = await Promise.all([
+      editCommitteeMeeting(
+        {
+          _id, reqBody, session
+        }
+      ),
+      logHistory(
+        {
+          req, res, reqBody, action, pageName, session
+        }
+      )
+    ]);
+
+    const failedTxns = createcontrollerResult.filter((result) => result.status !== true);
+    if (failedTxns.length) {
+      const errors = failedTxns.map(a => a.message);
       await session.abortTransaction();
-      session.endSession();
-  
-      return res.status(500).json({
+      return res.status(400).json({
         status: false,
-        message: `${err}`,
-        err
+        message: errors
       })
     }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      status: true,
+      message: 'committeeMeeting is Updated successfully!'
+    })
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
+      status: false,
+      message: `${err}`,
+      err
+    })
+  }
 }
 
 exports.delete = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const _id  = req.params.key;
+    const _id = req.params.key;
     req.body.status = "deleted";
     const reqBody = req.body;
     const action = 'delete';
-    
+
     const createcontrollerResult = await Promise.all([
-      deletecommitteeMeeting(
+      deleteCommitteeMeeting(
         {
-          _id,reqBody,session
+          _id, reqBody, session
         }
       ),
-      deletecommitteeMeetingHistory(
+      deleteCommitteeMeetingHistory(
         {
-          _id,reqBody,session
+          _id, reqBody, session
         }
       ),
-      loghistory(
-          {
-            req, res,reqBody,action,pageName,session
-          }
+      logHistory(
+        {
+          req, res, reqBody, action, pageName, session
+        }
       )
     ]);
-    
+
     const failedTxns = createcontrollerResult.filter((result) => result.status !== true);
     if (failedTxns.length) {
       const errors = failedTxns.map(a => a.message);
@@ -164,17 +172,17 @@ exports.delete = async (req, res) => {
 exports.committeeMeetingList = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  let userDetails = "";
+  let commiteeDetails = "";
   try {
-    const {status} = req.body;
+    const { status } = req.body;
     const userResult = await Promise.all([
       committeeMeetingList(
         {
-            status , session
+          status, session
         }
       ),
     ]);
-    
+
     const failedTxns = userResult.filter((result) => result.status !== true);
     if (failedTxns.length) {
       const errors = failedTxns.map(a => a.message);
@@ -184,8 +192,8 @@ exports.committeeMeetingList = async (req, res) => {
         message: errors
       })
     } else {
-      if(userResult[0].status == true) {
-        userDetails = userResult[0].data
+      if (userResult[0].status == true) {
+        commiteeDetails = userResult[0].data
       }
     }
 
@@ -195,7 +203,7 @@ exports.committeeMeetingList = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: 'committeeMeeting details list!',
-      userDetails
+      commiteeDetails
     })
   } catch (err) {
     await session.abortTransaction();
@@ -213,15 +221,15 @@ exports.committeeMeetingpaystatusList = async (req, res) => {
   session.startTransaction();
   let committeeMeetingDetails = "";
   try {
-    const {mettingListquery} = req.body;
+    const { mettingListquery } = req.body;
     const userResult = await Promise.all([
-      committeeMeetingpaystatusList(
+      committeeMeetingPayStatusList(
         {
-          mettingListquery , session
+          mettingListquery, session
         }
       ),
     ]);
-    
+
     const failedTxns = userResult.filter((result) => result.status !== true);
     if (failedTxns.length) {
       const errors = failedTxns.map(a => a.message);
@@ -231,7 +239,7 @@ exports.committeeMeetingpaystatusList = async (req, res) => {
         message: errors
       })
     } else {
-      if(userResult[0].status == true) {
+      if (userResult[0].status == true) {
         committeeMeetingDetails = userResult[0].data
       }
     }
@@ -251,6 +259,51 @@ exports.committeeMeetingpaystatusList = async (req, res) => {
     return res.status(500).json({
       status: false,
       message: `Unable to find perform transfer. Please try again. \n Error: ${err}`
+    })
+  }
+}
+
+exports.getCommitteeMeetingDetail = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  let commiteeDetail = "";
+  try {
+    const reqBody = req.body;
+    const getuserDetailResult = await Promise.all([
+      getCommitteeMeetingDetail(
+        {
+          reqBody, session
+        }
+      ),
+    ]);
+    const failedTxns = getuserDetailResult.filter((result) => result.status !== true);
+    if (failedTxns.length) {
+      const errors = failedTxns.map(a => a.message);
+      await session.abortTransaction();
+      return res.status(400).json({
+        status: false,
+        message: errors
+      })
+    } else {
+      if (getuserDetailResult[0].status == true) {
+        commiteeDetail = getuserDetailResult[0].data;
+      }
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    let committeeMeetingDetail = commiteeDetail.resultData;
+    return res.status(200).json({
+      committeeMeetingDetail
+    })
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
+      status: false,
+      message: `${err}`,
+      err
     })
   }
 }

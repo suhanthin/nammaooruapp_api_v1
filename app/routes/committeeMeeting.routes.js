@@ -13,17 +13,17 @@ module.exports = function (app) {
   app.post(
     "/api/committeeMeeting/create",
     [
-      authJwt.verifyToken, 
-      authJwt.isSuperadminorAdmin,  
+      // authJwt.verifyToken, 
+      // authJwt.isSuperadminorAdmin,  
       checkValueExisted.checkCommitteeDateExisted
     ],
     controller.create
   );
 
-  app.get(
+  app.post(
     "/api/committeeMeeting/list",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.committeeMeetingList
@@ -32,7 +32,7 @@ module.exports = function (app) {
   app.get(
     "/api/committeeMeeting/update/:key",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin,
       checkValueExisted.checkCommitteeDateExisted
     ],
@@ -42,7 +42,7 @@ module.exports = function (app) {
   app.get(
     "/api/committeeMeeting/delete/:key",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.delete
@@ -51,9 +51,18 @@ module.exports = function (app) {
   app.get(
     "/api/committeeMeeting/paystatuslist",
     [
-      authJwt.verifyToken, 
+      authJwt.verifyToken,
       authJwt.isSuperadminorAdmin
     ],
     controller.committeeMeetingpaystatusList
+  );
+
+  app.post(
+    "/api/committeeMeeting/detail",
+    [
+      authJwt.verifyToken,
+      authJwt.isSuperadminorAdmin
+    ],
+    controller.getCommitteeMeetingDetail
   );
 };
